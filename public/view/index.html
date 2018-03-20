@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real Time</title>
+  
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  
+  <link href="../css/style.css" rel="stylesheet">
+
+  <script>
+    var socket;
+    function connectSocket(){
+      var userName = String( $('#userName').val() ).trim();
+      if( userName == '' || userName === 'undefined' || userName === undefined){
+        alert('please enter user name');
+        return;
+      }
+      
+
+      socket = io.connect("/", {
+        "connect timeout": 3000,
+        "reconnect": false,
+        query: "name="+userName
+      });
+
+      socket.on('success', (val) => {
+        console.log(' msg from server  '+val.success);
+        $('#prompt').addClass('hide');
+        $('#content').removeClass('hide');
+        $('#content').addClass('show-container');
+      });
+
+      socket.on('newUserJoin', (val) => {
+        $('#userList').empty();
+
+        for(var i=0; i<val.length; i++){
+          $("#userList").append("<li>" + String(val[i].name) + "</li>");
+        }
+
+      });
+
+      socket.on('sendMsg', (val) => {
+        var old = $('#msg').val();
+        var newMsg = old + val + "</br>";
+        $('#msg').append(newMsg);
+      });
+
+    }
+
+    function sendMsg(){
+      var msg = $('#inputMsg').val();
+      socket.emit('sendMsg', msg);
+      $('#inputMsg').val("");
+      
+    }
+  </script>
+  </head>
+
+  
+<body>
+
+  <!-- ask user name -->
+  <div id="prompt" class="prompt-bg">
+      <div class="prompt-bg-inner">
+        <label>Enter Your Name: </label>
+        <input id="userName" type="text" value="user1">
+        <button onclick="connectSocket()">Enter</button>
+      </div>
+  </div>
+
+  <!-- main contents area -->
+  <div id="content" class="hide">
+
+      <div id="userContainer">
+          <ul id="userList">
+          </ul>
+      </div>
+
+
+      <div id="users" class="users-container">
+        <div class="msg-box">
+            <span id="msg"></span>
+        </div>
+        <input type="text" id="inputMsg"/>
+        <button onclick="sendMsg()">Send</button>
+      </div>
+    
+
+  </div>
+
+
+</body>
